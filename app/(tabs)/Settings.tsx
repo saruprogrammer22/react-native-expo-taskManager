@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useDeleteMyUser, useSignOutUser } from '../(services)/api/MyUserApi';
-import { router, } from 'expo-router';
-
+import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 const Settings: React.FC = () => {
-
-
     const [isLoading, setIsLoading] = useState(false);
     const signOutMutation = useSignOutUser();
-    const deleteAccount = useDeleteMyUser()
+    const deleteAccount = useDeleteMyUser();
 
     const handleLogout = () => {
         setIsLoading(true);
@@ -21,67 +19,79 @@ const Settings: React.FC = () => {
         });
     };
 
-
     const handleDeleteAccount = () => {
         deleteAccount.mutate(undefined, {
             onSuccess: () => {
                 router.push("/(tabs)")
             }
-        })
+        });
     };
 
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Settings</Text>
-            <TouchableOpacity
-                style={[styles.button, isLoading && styles.disabledButton]}
-                onPress={handleLogout}
-                disabled={isLoading}
-            >
-                {isLoading ? (
-                    <ActivityIndicator color="#ffffff" />
-                ) : (
-                    <Text style={styles.buttonText}>Logout</Text>
-                )}
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={handleDeleteAccount}>
-                <Text style={styles.buttonText}>Delete Account</Text>
-            </TouchableOpacity>
+            <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                    style={[styles.button, isLoading && styles.disabledButton]}
+                    onPress={handleLogout}
+                    disabled={isLoading}
+                >
+                    {isLoading ? (
+                        <ActivityIndicator color="#ffffff" />
+                    ) : (
+                        <>
+                            <Ionicons name="log-out-outline" size={24} color="#ffffff" />
+                            <Text style={styles.buttonText}>Logout</Text>
+                        </>
+                    )}
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={handleDeleteAccount}>
+                    <Ionicons name="trash-outline" size={24} color="#ffffff" />
+                    <Text style={styles.buttonText}>Delete Account</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
 
-export default Settings;
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 16,
-        backgroundColor: '#f8f8f8',
+        justifyContent: 'flex-start',
+        alignItems: 'stretch',
+        padding: 24,
+        backgroundColor: '#ffffff',
     },
     title: {
-        fontSize: 24,
+        fontSize: 32,
         fontWeight: 'bold',
-        marginBottom: 20,
+        marginBottom: 40,
+        color: '#333333',
+    },
+    buttonContainer: {
+        alignItems: 'stretch',
     },
     button: {
-        backgroundColor: '#007BFF',
-        paddingVertical: 12,
-        paddingHorizontal: 32,
-        borderRadius: 8,
-        marginVertical: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#007AFF',
+        paddingVertical: 16,
+        borderRadius: 12,
+        marginBottom: 16,
     },
     deleteButton: {
-        backgroundColor: '#FF0000',
+        backgroundColor: '#FF3B30',
     },
     disabledButton: {
-        backgroundColor: '#ccc',
+        backgroundColor: '#A7A7A7',
     },
     buttonText: {
         color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: 'bold',
+        fontSize: 18,
+        fontWeight: '600',
+        marginLeft: 8,
     },
 });
+
+export default Settings;

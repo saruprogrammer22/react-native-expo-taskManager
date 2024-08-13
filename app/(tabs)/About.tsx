@@ -1,92 +1,113 @@
-import { StyleSheet, Text, View } from 'react-native';
 import React from 'react';
-import { LinearGradient } from 'expo-linear-gradient';
+import { StyleSheet, Text, View, FlatList, Dimensions, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons, FontAwesome, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
 
-const TabHome: React.FC = () => {
+// Technologies i use
+import { technologies } from '../config/Technologies';
+
+
+
+const TechnologyItem: React.FC<{
+    name: string;
+    icon: string;
+    type: string;
+    color: string;
+    bgColor: string;
+}> = ({ name, icon, type, color, bgColor }) => {
+    const IconComponent = type === 'Ionicons' ? Ionicons :
+        type === 'FontAwesome' ? FontAwesome :
+            type === 'FontAwesome5' ? FontAwesome5 :
+                MaterialCommunityIcons;
+
+    const animatedValue = new Animated.Value(1);
+
+    const onPressIn = () => {
+        Animated.spring(animatedValue, {
+            toValue: 0.95,
+            useNativeDriver: true,
+        }).start();
+    };
+
+    const onPressOut = () => {
+        Animated.spring(animatedValue, {
+            toValue: 1,
+            useNativeDriver: true,
+        }).start();
+    };
 
     return (
+        <TouchableOpacity
+            onPressIn={onPressIn}
+            onPressOut={onPressOut}
+            activeOpacity={0.7}
+        >
+            <Animated.View style={[
+                styles.technologyItemContainer,
+                { backgroundColor: bgColor, transform: [{ scale: animatedValue }] }
+            ]}>
+                <IconComponent name={icon as any} size={32} color={color} style={styles.technologyIcon} />
+                <Text style={[styles.technologyItemText, { color }]}>{name}</Text>
+            </Animated.View>
+        </TouchableOpacity>
+    );
+};
+
+const TabHome: React.FC = () => {
+    return (
         <View style={styles.container}>
-            <View style={styles.contentContainer}>
-                <Text style={styles.title}>Technologies</Text>
-                <View style={styles.technologiesContainer}>
-                    {/* React Native */}
-                    <LinearGradient colors={['#61DAFB', '#61DAFB']} style={styles.technologyItemContainer}>
-                        <Ionicons name="logo-react" size={20} color="white" style={styles.technologyIcon} />
-                        <Text style={styles.technologyItemText}>React Native</Text>
-                    </LinearGradient>
-                    {/* Zustand */}
-                    <LinearGradient colors={['#5E49E3', '#5E49E3']} style={styles.technologyItemContainer}>
-                        <FontAwesome5 name="code" size={20} color="white" style={styles.technologyIcon} />
-                        <Text style={styles.technologyItemText}>Zustand</Text>
-                    </LinearGradient>
-                    {/* Node JS */}
-                    <LinearGradient colors={['#3C873A', '#3C873A']} style={styles.technologyItemContainer}>
-                        <FontAwesome name="server" size={20} color="white" style={styles.technologyIcon} />
-                        <Text style={styles.technologyItemText}>Node JS</Text>
-                    </LinearGradient>
-                    {/* MySQL */}
-                    <LinearGradient colors={['#4479A1', '#4479A1']} style={styles.technologyItemContainer}>
-                        <MaterialCommunityIcons name="database" size={20} color="white" style={styles.technologyIcon} />
-                        <Text style={styles.technologyItemText}>MySQL</Text>
-                    </LinearGradient>
-                    {/* Tanstack Query */}
-                    <LinearGradient colors={['#F15B2A', '#F15B2A']} style={styles.technologyItemContainer}>
-                        <FontAwesome5 name="code" size={20} color="white" style={styles.technologyIcon} />
-                        <Text style={styles.technologyItemText}>Tanstack Query</Text>
-                    </LinearGradient>
-                    {/* Zod (using a checklist icon to represent forms and validation) */}
-                    <LinearGradient colors={['#7C53F8', '#7C53F8']} style={styles.technologyItemContainer}>
-                        <FontAwesome5 name="check-double" size={20} color="white" style={styles.technologyIcon} />
-                        <Text style={styles.technologyItemText}>Zod</Text>
-                    </LinearGradient>
-                </View>
-            </View>
+            <Text style={styles.title}>Tech Stack</Text>
+            <FlatList
+                data={technologies}
+                renderItem={({ item }) => <TechnologyItem {...item} />}
+                keyExtractor={(item) => item.name}
+                numColumns={2}
+                columnWrapperStyle={styles.columnWrapper}
+                showsVerticalScrollIndicator={false}
+            />
         </View>
     );
 };
 
+const { width } = Dimensions.get('window');
+const itemWidth = (width - 48) / 2;
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-        backgroundColor: '#f9f9f9',
-    },
-    contentContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+        paddingTop: 60,
+        paddingHorizontal: 16,
     },
     title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        textAlign: 'center',
+        fontSize: 32,
+        fontWeight: '800',
+        color: '#333333',
+        marginBottom: 24,
+        textAlign: 'left',
     },
-    technologiesContainer: {
-        alignItems: 'center',
+    columnWrapper: {
+        justifyContent: 'space-between',
     },
     technologyItemContainer: {
-        flexDirection: 'row',
+        width: itemWidth,
+        aspectRatio: 1,
+        justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 10,
-        padding: 15,
-        borderRadius: 10,
+        marginBottom: 16,
+        borderRadius: 20,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 3,
-        elevation: 2,
+        shadowRadius: 8,
+        elevation: 5,
     },
     technologyIcon: {
-        marginRight: 10,
+        marginBottom: 12,
     },
     technologyItemText: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: '600',
-        color: 'white',
+        textAlign: 'center',
     },
 });
 
