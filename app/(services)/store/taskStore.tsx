@@ -1,35 +1,18 @@
 import { create } from 'zustand';
-
-
-type TaskResult = {
-    id: number | null;
-    message: string | null;
-}
+import { TaskType } from '../../types/types';
 
 interface TaskState {
-    id: number | null;
-    title: string | null;
-    category: string | null;
-    status: string | null;
-    result: TaskResult | null;
-    allTaskResult: TaskResult | null;
-    addTask: (status: string, result: TaskResult) => void;
-    getAllTask: (status: string, result: TaskResult) => void;
-    clearUser: () => void;
+    tasks: TaskType[];
+    addTask: (task: TaskType) => void;
+    setTasks: (tasks: TaskType[]) => void;
+    removeTask: (id: number) => void;
 }
 
-// Create the Zustand store
 const useTaskStore = create<TaskState>((set) => ({
-    id: null,
-    title: null,
-    category: null,
-    status: null,
-    result: null,
-    allTaskResult: null,
-    addTask: (status, result) => set({ status, result }),
-    getAllTask: (status, allTaskResult) => set({ status, allTaskResult }),
-    clearUser: () => set({ id: null, title: null, category: null, status: null }),
+    tasks: [],
+    addTask: (task) => set((state) => ({ tasks: [...state.tasks, task] })),
+    setTasks: (tasks) => set({ tasks }),
+    removeTask: (id) => set((state) => ({ tasks: state.tasks.filter(task => task.taskId !== id) })),
 }));
-
 
 export default useTaskStore;

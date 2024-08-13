@@ -72,14 +72,21 @@ export const useLoginUser = () => {
 };
 
 export const useSignOutUser = () => {
+    const { clearUser } = useUserStore((state) => ({
+        token: state.token,
+        userId: state.userId,
+        clearUser: state.clearUser
+    }));
     return useMutation({
         mutationFn: async () => {
             await axios.post(`${API_BASE_URL}/api/my/user/sign-out`);
+            clearUser()
         },
         onSuccess: async () => {
             try {
                 await SecureStore.deleteItemAsync('authToken');
                 delete axios.defaults.headers.common['Authorization'];
+                clearUser()
                 Alert.alert("Success", "You have successfully logged out.");
                 router.push("/auth/login");
             } catch (error) {
@@ -130,7 +137,7 @@ export const useGetMyCurrentUser = () => {
         userId: state.userId,
         token: state.token,
     }));
-
+    console.log(userId);
     const getUser = useUserStore((state) => state.getUser);
 
     return useQuery<User, AxiosError<{ error: string }>>({
@@ -161,6 +168,7 @@ export const useDeleteMyUser = () => {
             const response = await axios.delete<DeleteUserResponse>(`${API_BASE_URL}/api/my/user/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
+            clearUser()
             return response.data;
         },
         onSuccess: async (data) => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -7,7 +7,6 @@ import {
     TouchableOpacity,
     Alert,
     ActivityIndicator,
-    FlatList,
     SafeAreaView,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
@@ -17,19 +16,17 @@ import Modal from 'react-native-modal';
 import { Picker } from '@react-native-picker/picker';
 import { useCreateTask, useDeleteMyTask, useGetMyTasks } from '../(services)/api/MyTaskApi';
 import RenderTaskItem from '../component/RenderTaskItem';
+import useTaskStore from '../(services)/store/taskStore';
 
-// Define Zod schema for form validation
 const taskFormSchema = z.object({
     title: z.string().min(1, "Title is required"),
     category: z.string().min(1, "Category is required"),
     status: z.enum(['Low', 'Medium', 'High', 'pending', 'in-progress', 'completed']),
 });
 
-// Define form data type
 type TaskFormData = z.infer<typeof taskFormSchema>;
 
 const TaskForm: React.FC = () => {
-
     const [isModalVisible, setModalVisible] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -42,32 +39,46 @@ const TaskForm: React.FC = () => {
         },
     });
 
-    const { data: tasks, refetch, isFetching } = useGetMyTasks();
-
+    const { refetch, isFetching } = useGetMyTasks();
+    const { tasks } = useTaskStore((state) => ({
+        tasks: state.tasks
+    }));
     const createTaskMutation = useCreateTask();
-    const deleteTaskMutation = useDeleteMyTask()
+    const deleteTaskMutation = useDeleteMyTask();
 
+    useEffect(() => {
+        refetch();
+    }, []);
 
     const onSubmit = async (data: TaskFormData) => {
+        setIsLoading(true);
         try {
-            setIsLoading(true);
             await createTaskMutation.mutateAsync(data);
             setModalVisible(false);
             reset();
-            setIsLoading(false);
-            await refetch(); // Refetch tasks after successful creation
+            await refetch();
         } catch (error) {
             console.error('Submission error:', error);
+        } finally {
             setIsLoading(false);
         }
     };
 
     const onDelete = async (taskId: number) => {
-        deleteTaskMutation.mutate(taskId)
-        console.log(`Deleting task with ID: ${taskId}`);
-        await refetch()
+        try {
+            deleteTaskMutation.mutate(taskId, {
+                onSuccess: async () => {
+                    await refetch();
+                },
+                onError: (error) => {
+                    console.error(`Failed to delete task with ID: ${taskId}`, error);
+                    Alert.alert('Error', 'Failed to delete task. Please try again.');
+                }
+            });
+        } catch (error) {
+            console.error(`Error deleting task with ID: ${taskId}`, error);
+        }
     };
-
 
     return (
         <SafeAreaView style={styles.container}>
@@ -130,7 +141,7 @@ const TaskForm: React.FC = () => {
                                         onValueChange={onChange}
                                     >
                                         <Picker.Item label="Select Status" value="" />
-                                        <Picker.Item label="Low" value="low" />
+                                        <Picker.Item label="Low" value="Low" />
                                         <Picker.Item label="Medium" value="Medium" />
                                         <Picker.Item label="High" value="High" />
                                         <Picker.Item label="Pending" value="pending" />
@@ -152,18 +163,16 @@ const TaskForm: React.FC = () => {
                 </View>
             </Modal>
 
-
             {isFetching ? (
                 <ActivityIndicator style={styles.loader} />
             ) : tasks && tasks.length > 0 ? (
-                <RenderTaskItem tasks={tasks} onDelete={onDelete} />
+                <RenderTaskItem onDelete={onDelete} tasks={tasks} />
             ) : (
                 <Text style={styles.emptyListText}>No tasks available</Text>
             )}
         </SafeAreaView>
     );
 };
-
 
 export default TaskForm;
 
@@ -244,8 +253,8 @@ const styles = StyleSheet.create({
         marginTop: 20,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
         elevation: 5,
     },
     submitButtonText: {
@@ -254,65 +263,28 @@ const styles = StyleSheet.create({
         fontWeight: '700',
     },
     cancelButton: {
-        backgroundColor: '#888',
+        backgroundColor: '#ddd',
         paddingVertical: 15,
         borderRadius: 10,
         alignItems: 'center',
-        marginTop: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
-        elevation: 5,
+        marginTop: 10,
     },
     cancelButtonText: {
-        color: '#fff',
+        color: '#333',
         fontSize: 18,
         fontWeight: '700',
     },
     errorText: {
         color: 'red',
-        marginTop: 5,
-        fontSize: 12,
-    },
-    apiErrorText: {
-        color: 'red',
-        fontSize: 14,
-        marginBottom: 10,
-        textAlign: 'center',
-    },
-    taskItem: {
-        backgroundColor: '#fff',
-        padding: 15,
-        borderRadius: 10,
-        marginBottom: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    taskTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        marginBottom: 5,
-    },
-    taskCategory: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 5,
-    },
-    taskStatus: {
-        fontSize: 14,
-        color: '#666',
+        marginTop: 4,
     },
     loader: {
-        marginTop: 20,
+        marginTop: 50,
     },
     emptyListText: {
+        marginTop: 50,
+        fontSize: 18,
+        color: '#777',
         textAlign: 'center',
-        marginTop: 20,
-        fontSize: 16,
-        color: '#666',
     },
 });

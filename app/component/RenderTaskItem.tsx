@@ -6,7 +6,7 @@ import { TaskType } from '../types/types';
 
 interface RenderTaskItemProps {
     tasks: TaskType[];
-    onDelete: (id: number) => void;
+    onDelete: (taskId: number) => void;
 }
 
 const RenderTaskItem: React.FC<RenderTaskItemProps> = ({ tasks, onDelete }) => {
@@ -30,10 +30,14 @@ const RenderTaskItem: React.FC<RenderTaskItemProps> = ({ tasks, onDelete }) => {
         }
     };
 
+    if (tasks.length === 0) {
+        return <Text>No Task found</Text>
+    }
+
     return (
         <View style={styles.container}>
-            {tasks.map((task) => (
-                <View key={task.taskId} style={styles.taskContainer}>
+            {tasks.map((task, i) => (
+                <View key={i} style={styles.taskContainer}>
                     <View style={styles.textContainer}>
                         <Text style={styles.title}>{task.title}</Text>
                         <Text style={styles.description}>Category: {task.category}</Text>
